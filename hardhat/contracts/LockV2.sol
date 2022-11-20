@@ -3,7 +3,7 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract Lock is Initializable {
+contract LockV2 is Initializable {
     uint public unlockTime;
     address payable public owner;
 
@@ -16,6 +16,10 @@ contract Lock is Initializable {
 
     function increment() public {
         unlockTime += 1;
+    }
+
+    function decrement() public {
+        unlockTime -= 1;
     }
 
     function withdraw() public {

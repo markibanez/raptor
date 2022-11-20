@@ -1,0 +1,136 @@
+{
+  "manifestVersion": "3.2",
+  "admin": {
+    "address": "0x583C2e6D046C24d354152a4F631DA6f404E4F61F",
+    "txHash": "0xf75af46e01e8eecceeb2cb0c3c57750dbc7435b6d6a488ed46ec0005b21d0387"
+  },
+  "proxies": [
+    {
+      "address": "0x39610D5562a3350A61d6739981dd88634c92a15a",
+      "txHash": "0x618ba4be5ac9beb700bf4081190cc13d7f3ab37c644e92e08bd1e05679d6259f",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "fefceebfe62e31883490361fbf758451c5426d8c14a07b01a9d96640168750f4": {
+      "address": "0x1e577De81031B83dEF3f44fd96D356Ad6EFa1eB1",
+      "txHash": "0x9a14b603b31068760ce13818137074e83030e835284b825bfd13b31320e6dc8e",
+      "layout": {
+        "solcVersion": "0.8.17",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:67"
+          },
+          {
+            "label": "unlockTime",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256",
+            "contract": "Lock",
+            "src": "contracts\\Lock.sol:7"
+          },
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_address_payable",
+            "contract": "Lock",
+            "src": "contracts\\Lock.sol:8"
+          }
+        ],
+        "types": {
+          "t_address_payable": {
+            "label": "address payable",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    },
+    "173665109d96b22c3b4c1ff6026e5f335e1ae96274ec2f423b8884f00bed63b6": {
+      "address": "0xe707078683aEe0dA15273215DDAdEb851Aa25639",
+      "txHash": "0xa5ba5eaf540c6219ef6823c27aa70f6ec3bafe6f152e932bbeada337fa3a5b5c",
+      "layout": {
+        "solcVersion": "0.8.17",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:67"
+          },
+          {
+            "label": "unlockTime",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256",
+            "contract": "LockV2",
+            "src": "contracts\\LockV2.sol:7"
+          },
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_address_payable",
+            "contract": "LockV2",
+            "src": "contracts\\LockV2.sol:8"
+          }
+        ],
+        "types": {
+          "t_address_payable": {
+            "label": "address payable",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    }
+  }
+}

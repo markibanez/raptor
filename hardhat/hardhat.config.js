@@ -1,5 +1,6 @@
 require('dotenv').config();
 require('@nomicfoundation/hardhat-toolbox');
+require('@openzeppelin/hardhat-upgrades');
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -13,13 +14,19 @@ module.exports = {
         },
     },
     networks: {
-        mumbai: {
-            url: '',
-            accounts: [''],
+        polygonMumbai: {
+            url: process.env.MUMBAI_URL,
+            accounts: [process.env.DEPLOYER_PRIVATE_KEY],
         },
         polygon: {
-            url: '',
-            accounts: [''],
+            url: process.env.POLYGON_URL,
+            accounts: [process.env.DEPLOYER_PRIVATE_KEY],
         },
     },
+    etherscan: {
+        apiKey: {
+            polygon: process.env.POLYGONSCAN_API_KEY,
+            polygonMumbai: process.env.POLYGONSCAN_API_KEY
+       }
+    }
 };
