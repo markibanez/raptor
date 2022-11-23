@@ -5,6 +5,9 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 
 contract RaptorV1 is Initializable, AccessControlUpgradeable {
+    /// @dev Custom error definitions
+    error NotAdmin();
+
     /// @notice Initializes the contract during deployment
     function initialize() public initializer {
         __AccessControl_init();
@@ -15,7 +18,9 @@ contract RaptorV1 is Initializable, AccessControlUpgradeable {
 
     /// @notice This modifier is used to restrict access to users with the admin role
     modifier onlyAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Raptor: Only admin");
+        if (!hasRole(DEFAULT_ADMIN_ROLE, msg.sender)) {
+            revert NotAdmin();
+        }
         _;
     }
 
@@ -32,10 +37,14 @@ contract RaptorV1 is Initializable, AccessControlUpgradeable {
     /// @dev The mapping will store the corresponding IPFS CID for the account
     mapping(address => string) public accounts;
 
+    /// @notice This event is emitted when an account is created
+    event AccountCreated(address indexed account, string metadataCid);
+
     /// @notice This function will create an account for the sender
     /// @param metadataCid The IPFS CID for the metadata
     function createAccount(string memory metadataCid) external payable {
         require(msg.value >= createAccountPrice, "Raptor: Did not send enough");
         accounts[msg.sender] = metadataCid;
+        emit AccountCreated(msg.sender, metadataCid);
     }
 }
