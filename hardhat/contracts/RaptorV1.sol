@@ -7,6 +7,7 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol"
 contract RaptorV1 is Initializable, AccessControlUpgradeable {
     /// @dev Custom error definitions
     error NotAdmin();
+    error DidNotPayEnough();
 
     /// @notice Initializes the contract during deployment
     function initialize() public initializer {
@@ -42,9 +43,31 @@ contract RaptorV1 is Initializable, AccessControlUpgradeable {
 
     /// @notice This function will create an account for the sender
     /// @param metadataCid The IPFS CID for the metadata
+    /// @dev The sender must pay the createAccountPrice (to avoid spam and abuse)
     function createAccount(string memory metadataCid) external payable {
-        require(msg.value >= createAccountPrice, "Raptor: Did not send enough");
+        if (msg.value < createAccountPrice) {
+            revert DidNotPayEnough();
+        }
         accounts[msg.sender] = metadataCid;
         emit AccountCreated(msg.sender, metadataCid);
+    }
+
+    /// @notice This event is emitted when an account is updated
+    event AccountUpdated(address indexed account, string metadataCid);
+
+    /// @notice This function will update an account for the sender
+    /// @param metadataCid The IPFS CID for the updated metadata
+    function updateAccount(string memory metadataCid) external {
+        accounts[msg.sender] = metadataCid;
+        emit AccountUpdated(msg.sender, metadataCid);
+    }
+
+    /// @notice This event is emitted when an account is deleted
+    event AccountDeleted(address indexed account);
+
+    /// @notice This function will delete an account for the sender
+    function deleteAccount() external {
+        delete accounts[msg.sender];
+        emit AccountDeleted(msg.sender);
     }
 }
