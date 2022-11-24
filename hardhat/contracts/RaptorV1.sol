@@ -114,6 +114,13 @@ contract RaptorV1 is Initializable, AccessControlUpgradeable {
         return follows[msg.sender].length();
     }
 
+    /// @notice This function will return the account the sender follows at the given index
+    /// @param index The index of the account to return
+    /// @return The account the sender follows at the given index
+    function getFollowsAtIndex(uint256 index) external view returns (address) {
+        return follows[msg.sender].at(index);
+    }
+
     /// @notice This function will return the accounts that follow the sender
     /// @return The accounts that follow the sender
     function getFollowers() external view returns (address[] memory) {
@@ -124,5 +131,12 @@ contract RaptorV1 is Initializable, AccessControlUpgradeable {
     /// @return The number of accounts that follow the sender
     function getFollowersCount() external view returns (uint256) {
         return followers[msg.sender].length();
+    }
+
+    /// @notice This function will return the account that follows the sender at the given index
+    /// @param index The index of the account to return
+    /// @return The account that follows the sender at the given index
+    function getFollowersAtIndex(uint256 index) external view returns (address) {
+        return followers[msg.sender].at(index);
     }
 }
