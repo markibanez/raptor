@@ -101,4 +101,28 @@ contract RaptorV1 is Initializable, AccessControlUpgradeable {
         followers[account].remove(msg.sender);
         emit AccountUnfollowed(msg.sender, account);
     }
+
+    /// @notice This function will return the accounts that the sender follows
+    /// @return The accounts that the sender follows
+    function getFollows() external view returns (address[] memory) {
+        return follows[msg.sender].values();
+    }
+
+    /// @notice This function will return the number of accounts that the sender follows
+    /// @return The number of accounts that the sender follows
+    function getFollowsCount() external view returns (uint256) {
+        return follows[msg.sender].length();
+    }
+
+    /// @notice This function will return the accounts that follow the sender
+    /// @return The accounts that follow the sender
+    function getFollowers() external view returns (address[] memory) {
+        return followers[msg.sender].values();
+    }
+
+    /// @notice This function will return the number of accounts that follow the sender
+    /// @return The number of accounts that follow the sender
+    function getFollowersCount() external view returns (uint256) {
+        return followers[msg.sender].length();
+    }
 }
