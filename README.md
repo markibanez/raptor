@@ -13,3 +13,7 @@ It is the decentralized, web3 version of Twitter.
 - The data for the accounts will be stored on IPFS (nft.storage, which is free!)
 - We will charge a fee to create an account (probably 5 MATIC, around $4 or $5)
     - Charging a fee to create an account will make it expensive to create botnets
+
+
+## Follows
+- We are using EnumerableSets
