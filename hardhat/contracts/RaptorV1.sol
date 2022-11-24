@@ -3,8 +3,11 @@ pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 
 contract RaptorV1 is Initializable, AccessControlUpgradeable {
+    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
+
     /// @dev Custom error definitions
     error NotAdmin();
     error DidNotPayEnough();
@@ -69,5 +72,33 @@ contract RaptorV1 is Initializable, AccessControlUpgradeable {
     function deleteAccount() external {
         delete accounts[msg.sender];
         emit AccountDeleted(msg.sender);
+    }
+
+    /// @dev This stores the account addresses that an account follows
+    mapping(address => EnumerableSetUpgradeable.AddressSet) private follows;
+
+    /// @dev This stores the account addresses that follow an account
+    mapping(address => EnumerableSetUpgradeable.AddressSet) private followers;
+
+    /// @notice This event is emitted when an account follows another account
+    event AccountFollowed(address indexed account, address indexed followed);
+
+    /// @notice This function will follow an account for the sender
+    /// @param account The account to follow
+    function follow(address account) external {
+        follows[msg.sender].add(account);
+        followers[account].add(msg.sender);
+        emit AccountFollowed(msg.sender, account);
+    }
+
+    /// @notice This event is emitted when an account unfollows another account
+    event AccountUnfollowed(address indexed account, address indexed unfollowed);
+
+    /// @notice This function will unfollow an account for the sender
+    /// @param account The account to unfollow
+    function unfollow(address account) external {
+        follows[msg.sender].remove(account);
+        followers[account].remove(msg.sender);
+        emit AccountUnfollowed(msg.sender, account);
     }
 }
