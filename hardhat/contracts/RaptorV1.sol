@@ -117,7 +117,7 @@ contract RaptorV1 is Initializable, AccessControlUpgradeable {
     /// @notice This function will return the account the sender follows at the given index
     /// @param index The index of the account to return
     /// @return The account the sender follows at the given index
-    function getFollowsAtIndex(uint256 index) external view returns (address) {
+    function getFollowAtIndex(uint256 index) external view returns (address) {
         return follows[msg.sender].at(index);
     }
 
@@ -136,7 +136,7 @@ contract RaptorV1 is Initializable, AccessControlUpgradeable {
     /// @notice This function will return the account that follows the sender at the given index
     /// @param index The index of the account to return
     /// @return The account that follows the sender at the given index
-    function getFollowersAtIndex(uint256 index) external view returns (address) {
+    function getFollowerAtIndex(uint256 index) external view returns (address) {
         return followers[msg.sender].at(index);
     }
 }

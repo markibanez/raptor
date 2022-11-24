@@ -129,11 +129,23 @@ describe('RaptorV1', function () {
             // check user1 followers count
             expect(await raptorV1.connect(user1).getFollowersCount()).to.equal(user1Followers.length);
 
+            // check user1 followers at each index
+            for (let i = 0; i < user1Followers.length; i++) {
+                expect(await raptorV1.connect(user1).getFollowerAt(i)).to.equal(user1Followers[i].address);
+                expect(await raptorV1.connect(follower).getFollow(i)).to.equal(user1Followers[i].address);
+            }
+
             // check user2 followers
             expect(await raptorV1.connect(user2).getFollowers()).to.have.members(user2Followers.map((f) => f.address));
 
             // check user2 followers count
             expect(await raptorV1.connect(user2).getFollowersCount()).to.equal(user2Followers.length);
+
+            // check user2 followers at each index
+            for (let i = 0; i < user2Followers.length; i++) {
+                expect(await raptorV1.connect(user2).getFollowerAt(i)).to.equal(user2Followers[i].address);
+                expect(await raptorV1.connect(follower).getFollow(i)).to.equal(user2Followers[i].address);
+            }
 
             // check user1 followers if they follow user1
             for (const follower of user1Followers) {
