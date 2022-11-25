@@ -8,12 +8,12 @@ describe('RaptorV1', function () {
     describe('Accounts', function () {
         async function initializeFixture() {
             const signers = await ethers.getSigners();
-            const [deployer, public1, admin1, user1, user2] = signers;
+            const [deployer, public1, admin1, user1, user2, user3] = signers;
 
             const RaptorV1 = await ethers.getContractFactory('RaptorV1');
             const raptorV1 = await upgrades.deployProxy(RaptorV1, []);
 
-            return { deployer, public1, admin1, user1, user2, raptorV1 };
+            return { deployer, public1, admin1, user1, user2, user3, raptorV1 };
         }
 
         it('createAccountPrice should be equal to 5 ether', async function () {
@@ -43,20 +43,29 @@ describe('RaptorV1', function () {
         it('user1 attempts to create an account with 4.5 ether and should fail', async function () {
             const { raptorV1, user1 } = await loadFixture(initializeFixture);
             await expect(
-                raptorV1.connect(user1).createAccount({ value: parseEther('4.5') })
+                raptorV1.connect(user1).createAccount('metadata-cid-1', 'user1', { value: parseEther('4.5') })
             ).to.be.revertedWithCustomError(raptorV1, 'DidNotPayEnough');
         });
 
         it('user1 and user2 creates, updates and deletes their accounts', async function () {
-            const { raptorV1, user1, user2 } = await loadFixture(initializeFixture);
+            const { raptorV1, user1, user2, user3 } = await loadFixture(initializeFixture);
 
             // call createAccount
-            await expect(raptorV1.connect(user1).createAccount('test-metadata-cid-1', { value: parseEther('5') }))
+            await expect(
+                raptorV1.connect(user1).createAccount('test-metadata-cid-1', 'user1', { value: parseEther('5') })
+            )
                 .to.emit(raptorV1, 'AccountCreated')
-                .withArgs(user1.address, 'test-metadata-cid-1');
-            await expect(raptorV1.connect(user2).createAccount('test-metadata-cid-2', { value: parseEther('5') }))
+                .withArgs(user1.address, 'test-metadata-cid-1', 'user1');
+            await expect(
+                raptorV1.connect(user2).createAccount('test-metadata-cid-2', 'user2', { value: parseEther('5') })
+            )
                 .to.emit(raptorV1, 'AccountCreated')
-                .withArgs(user2.address, 'test-metadata-cid-2');
+                .withArgs(user2.address, 'test-metadata-cid-2', 'user2');
+
+            // user3 creates an account with user1's handle and should fail
+            await expect(
+                raptorV1.connect(user3).createAccount('test-metadata-cid-3', 'user1', { value: parseEther('5') })
+            ).to.be.revertedWithCustomError(raptorV1, 'HandleAlreadyTaken');
 
             // check account exists by getting cid string from accounts mapping
             expect(await raptorV1.accounts(user1.address)).to.equal('test-metadata-cid-1');
@@ -73,6 +82,24 @@ describe('RaptorV1', function () {
             // check account exists by getting cid string from accounts mapping
             expect(await raptorV1.accounts(user1.address)).to.equal('test-metadata-cid-1-updated');
             expect(await raptorV1.accounts(user2.address)).to.equal('test-metadata-cid-2-updated');
+
+            // call updateAccountHandle with existing handles
+            await expect(raptorV1.connect(user1).updateAccountHandle('user2')).to.be.revertedWithCustomError(
+                raptorV1,
+                'HandleAlreadyTaken'
+            );
+            await expect(raptorV1.connect(user2).updateAccountHandle('user1')).to.be.revertedWithCustomError(
+                raptorV1,
+                'HandleAlreadyTaken'
+            );
+
+            // call updateAccountHandle with new handles
+            await expect(raptorV1.connect(user1).updateAccountHandle('user1-updated'))
+                .to.emit(raptorV1, 'AccountHandleUpdated')
+                .withArgs(user1.address, 'user1-updated');
+            await expect(raptorV1.connect(user2).updateAccountHandle('user2-updated'))
+                .to.emit(raptorV1, 'AccountHandleUpdated')
+                .withArgs(user2.address, 'user2-updated');
 
             // call deleteAccount
             await expect(raptorV1.connect(user1).deleteAccount())
@@ -100,8 +127,8 @@ describe('RaptorV1', function () {
             const raptorV1 = await upgrades.deployProxy(RaptorV1, []);
 
             // create accounts for user1 and user2
-            await raptorV1.connect(user1).createAccount('test-metadata-cid-1', { value: parseEther('5') });
-            await raptorV1.connect(user2).createAccount('test-metadata-cid-2', { value: parseEther('5') });
+            await raptorV1.connect(user1).createAccount('test-metadata-cid-1', 'user1', { value: parseEther('5') });
+            await raptorV1.connect(user2).createAccount('test-metadata-cid-2', 'user2', { value: parseEther('5') });
 
             return { deployer, public1, admin1, user1, user2, user1Followers, user2Followers, raptorV1 };
         }
@@ -129,23 +156,11 @@ describe('RaptorV1', function () {
             // check user1 followers count
             expect(await raptorV1.connect(user1).getFollowersCount()).to.equal(user1Followers.length);
 
-            // check user1 followers at each index
-            for (let i = 0; i < user1Followers.length; i++) {
-                expect(await raptorV1.connect(user1).getFollowerAt(i)).to.equal(user1Followers[i].address);
-                expect(await raptorV1.connect(follower).getFollow(i)).to.equal(user1Followers[i].address);
-            }
-
             // check user2 followers
             expect(await raptorV1.connect(user2).getFollowers()).to.have.members(user2Followers.map((f) => f.address));
 
             // check user2 followers count
             expect(await raptorV1.connect(user2).getFollowersCount()).to.equal(user2Followers.length);
-
-            // check user2 followers at each index
-            for (let i = 0; i < user2Followers.length; i++) {
-                expect(await raptorV1.connect(user2).getFollowerAt(i)).to.equal(user2Followers[i].address);
-                expect(await raptorV1.connect(follower).getFollow(i)).to.equal(user2Followers[i].address);
-            }
 
             // check user1 followers if they follow user1
             for (const follower of user1Followers) {

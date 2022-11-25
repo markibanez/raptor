@@ -11,6 +11,7 @@ contract RaptorV1 is Initializable, AccessControlUpgradeable {
     /// @dev Custom error definitions
     error NotAdmin();
     error DidNotPayEnough();
+    error HandleAlreadyTaken();
 
     /// @notice Initializes the contract during deployment
     function initialize() public initializer {
@@ -41,18 +42,28 @@ contract RaptorV1 is Initializable, AccessControlUpgradeable {
     /// @dev The mapping will store the corresponding IPFS CID for the account
     mapping(address => string) public accounts;
 
+    /// @notice This mapping maps a handle to an address
+    /// @dev This mapping is used to check if a handle is already taken
+    mapping(string => address) public handles;
+
     /// @notice This event is emitted when an account is created
-    event AccountCreated(address indexed account, string metadataCid);
+    event AccountCreated(address indexed account, string metadataCid, string handle);
 
     /// @notice This function will create an account for the sender
     /// @param metadataCid The IPFS CID for the metadata
     /// @dev The sender must pay the createAccountPrice (to avoid spam and abuse)
-    function createAccount(string memory metadataCid) external payable {
+    function createAccount(string calldata metadataCid, string calldata handle) external payable {
         if (msg.value < createAccountPrice) {
             revert DidNotPayEnough();
         }
+
+        if (handles[handle] != address(0)) {
+            revert HandleAlreadyTaken();
+        }
+
         accounts[msg.sender] = metadataCid;
-        emit AccountCreated(msg.sender, metadataCid);
+        handles[handle] = msg.sender;
+        emit AccountCreated(msg.sender, metadataCid, handle);
     }
 
     /// @notice This event is emitted when an account is updated
@@ -63,6 +74,23 @@ contract RaptorV1 is Initializable, AccessControlUpgradeable {
     function updateAccount(string memory metadataCid) external {
         accounts[msg.sender] = metadataCid;
         emit AccountUpdated(msg.sender, metadataCid);
+    }
+
+    /// @notice This event is emitted when an account's handle is updated
+    event AccountHandleUpdated(address indexed account, string handle);
+
+    /// @notice This function will update an account's handle
+    /// @param handle The new handle
+    /// @dev If a handle is already mapped to another address, the function will revert
+    function updateAccountHandle(string calldata handle) external {
+        if (handles[handle] != address(0)) {
+            if (handles[handle] != msg.sender) {
+                revert HandleAlreadyTaken();
+            }
+        }
+
+        handles[handle] = msg.sender;
+        emit AccountHandleUpdated(msg.sender, handle);
     }
 
     /// @notice This event is emitted when an account is deleted
