@@ -17,3 +17,21 @@ It is the decentralized, web3 version of Twitter.
 
 ## Follows
 - We are using EnumerableSets
+- Rewrite follows / followers getters to accept address as parameter
+
+## Posts
+- Create of posts
+- Reply to a post
+- Repost a post
+    - Repost as is (retweet)
+    - Repost as a quote (quote tweet)
+- Delete a post
+- All these actions will cost 0.01 MATIC
+- Onchain data:
+    - Post ID
+    - Content CID
+    - Author
+    - Timestamp
+    - Quoted/reposted post ID
+- Offchain data:
+    - Content
