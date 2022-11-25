@@ -222,4 +222,148 @@ describe('RaptorV1', function () {
             expect(await raptorV1.connect(user2Followers[1]).getFollows()).to.have.members([user2.address]);
         });
     });
+
+    describe('Post transactions', function () {
+        async function initializeFixture() {
+            const signers = await ethers.getSigners();
+            const [deployer, public1, admin1, user1, user2, user3] = signers;
+
+            const RaptorV1 = await ethers.getContractFactory('RaptorV1');
+            const raptorV1 = await upgrades.deployProxy(RaptorV1, []);
+
+            return { deployer, public1, admin1, user1, user2, user3, raptorV1 };
+        }
+
+        it('postTransaction default price is 0.01 ether', async function () {
+            const { raptorV1 } = await loadFixture(initializeFixture);
+
+            expect(await raptorV1.postTransactionPrice()).to.equal(ethers.utils.parseEther('0.01'));
+        });
+
+        it('public1 cannot call setPostTransactionPrice', async function () {
+            const { public1, raptorV1 } = await loadFixture(initializeFixture);
+
+            await expect(
+                raptorV1.connect(public1).setPostTransactionPrice(ethers.utils.parseEther('0.01'))
+            ).to.be.revertedWithCustomError(raptorV1, 'NotAdmin');
+
+            // check postTransactionPrice is still 0.01 ether
+            expect(await raptorV1.postTransactionPrice()).to.equal(ethers.utils.parseEther('0.01'));
+        });
+
+        it('deployer can call setPostTransactionPrice', async function () {
+            const { deployer, raptorV1 } = await loadFixture(initializeFixture);
+
+            // deployer sets postTransactionPrice to 0.02 ether
+            await raptorV1.connect(deployer).setPostTransactionPrice(ethers.utils.parseEther('0.02'));
+
+            // check postTransactionPrice is 0.02 ether
+            expect(await raptorV1.postTransactionPrice()).to.equal(ethers.utils.parseEther('0.02'));
+        });
+
+        it('Perform CRUD and other operations on posts', async function () {
+            const { deployer, user1, user2, user3, raptorV1 } = await loadFixture(initializeFixture);
+
+            const postTransactionPrice = ethers.utils.parseEther('0.01');
+
+            // user1 creates a post with 0.009 ether which should fail
+            await expect(
+                raptorV1
+                    .connect(user1)
+                    .createPost('post-metadata-cid-001', 0, { value: ethers.utils.parseEther('0.009') })
+            ).to.be.revertedWithCustomError(raptorV1, 'DidNotPayEnough');
+
+            // user1 creates a post with 0.01 ether
+            await expect(
+                raptorV1.connect(user1).createPost('post-metadata-cid-001', 0, { value: postTransactionPrice })
+            )
+                .to.emit(raptorV1, 'PostCreated')
+                .withArgs(1, user1.address, 'post-metadata-cid-001');
+
+            // check post 1
+            const post1 = await raptorV1.connect(user1).posts(1);
+            expect(post1.author).to.equal(user1.address);
+            expect(post1.metadataCid).to.equal('post-metadata-cid-001');
+            expect(post1.quotedPostId).to.equal(0);
+            expect(post1.likes).to.equal(0);
+            expect(post1.reposts).to.equal(0);
+            expect(post1.replies).to.equal(0);
+
+            // user2 cannot update post 1
+            await expect(
+                raptorV1.connect(user2).updatePost(1, 'post-metadata-cid-001-updated', { value: postTransactionPrice })
+            ).to.be.revertedWithCustomError(raptorV1, 'NotTheAuthor');
+
+            // user1 updates post 1 with 0.009 ether which should fail
+            await expect(
+                raptorV1
+                    .connect(user1)
+                    .updatePost(1, 'post-metadata-cid-001-updated', { value: ethers.utils.parseEther('0.009') })
+            ).to.be.revertedWithCustomError(raptorV1, 'DidNotPayEnough');
+
+            // user1 updates post 1 with 0.01 ether
+            await expect(
+                raptorV1.connect(user1).updatePost(1, 'post-metadata-cid-001-updated', { value: postTransactionPrice })
+            )
+                .to.emit(raptorV1, 'PostUpdated')
+                .withArgs(1, user1.address, 'post-metadata-cid-001-updated');
+
+            // check post 1
+            const post1Updated = await raptorV1.connect(user1).posts(1);
+            expect(post1Updated.author).to.equal(user1.address);
+            expect(post1Updated.metadataCid).to.equal('post-metadata-cid-001-updated');
+            expect(post1Updated.quotedPostId).to.equal(0);
+            expect(post1Updated.likes).to.equal(0);
+            expect(post1Updated.reposts).to.equal(0);
+            expect(post1Updated.replies).to.equal(0);
+
+            // user1 likes post 1
+            await expect(raptorV1.connect(user1).likePost(1));
+
+            // post 1 likes should be 1
+            const post1Liked = await raptorV1.connect(user1).posts(1);
+            expect(post1Liked.likes).to.equal(1);
+
+            // user1 likes post 1 again which should fail
+            await expect(raptorV1.connect(user1).likePost(1)).to.be.revertedWithCustomError(raptorV1, 'AlreadyLiked');
+
+            // user2 likes post 1
+            await expect(raptorV1.connect(user2).likePost(1));
+
+            // post 1 likes should be 2
+            const post1Liked2 = await raptorV1.connect(user1).posts(1);
+            expect(post1Liked2.likes).to.equal(2);
+
+            // user1 unlikes post 1
+            await expect(raptorV1.connect(user1).unlikePost(1)).to.emit(raptorV1, 'PostUnliked').withArgs(1, user1.address);
+
+            // post 1 likes should be 1
+            const post1Unliked = await raptorV1.connect(user1).posts(1);
+            expect(post1Unliked.likes).to.equal(1);
+
+            // user1 unlikes post 1 again which should fail
+            await expect(raptorV1.connect(user1).unlikePost(1)).to.be.revertedWithCustomError(raptorV1, 'NotLiked');
+
+            // user2 cannot delete post 1
+            await expect(
+                raptorV1.connect(user2).deletePost(1, { value: postTransactionPrice })
+            ).to.be.revertedWithCustomError(raptorV1, 'NotTheAuthor');
+
+            // user1 deletes post 1 with 0.009 ether which should fail
+            await expect(
+                raptorV1.connect(user1).deletePost(1, { value: ethers.utils.parseEther('0.009') })
+            ).to.be.revertedWithCustomError(raptorV1, 'DidNotPayEnough');
+
+            // user1 deletes post 1 with 0.01 ether
+            await expect(raptorV1.connect(user1).deletePost(1, { value: postTransactionPrice }))
+                .to.emit(raptorV1, 'PostDeleted')
+                .withArgs(1, user1.address);
+
+            // check post 1
+            const post1Deleted = await raptorV1.connect(user1).posts(1);
+            expect(post1Deleted.author).to.equal(user1.address);
+            expect(post1Deleted.metadataCid).to.equal('');
+            expect(post1Deleted.quotedPostId).to.equal(0);
+        });
+    });
 });

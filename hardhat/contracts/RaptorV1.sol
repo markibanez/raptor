@@ -7,11 +7,15 @@ import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeab
 
 contract RaptorV1 is Initializable, AccessControlUpgradeable {
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
+    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
 
     /// @dev Custom error definitions
     error NotAdmin();
     error DidNotPayEnough();
     error HandleAlreadyTaken();
+    error NotTheAuthor();
+    error AlreadyLiked();
+    error NotLiked();
 
     /// @notice Initializes the contract during deployment
     function initialize() public initializer {
@@ -19,6 +23,7 @@ contract RaptorV1 is Initializable, AccessControlUpgradeable {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
 
         createAccountPrice = 5 ether; // default price is 5 matic
+        postTransactionPrice = 0.01 ether; // default price is 0.01 matic
     }
 
     /// @notice This modifier is used to restrict access to users with the admin role
@@ -166,5 +171,190 @@ contract RaptorV1 is Initializable, AccessControlUpgradeable {
     /// @return The account that follows the sender at the given index
     function getFollowerAtIndex(uint256 index) external view returns (address) {
         return followers[msg.sender].at(index);
+    }
+
+    /// @notice Price to create, update, delete, reply, like or repost a post
+    uint256 public postTransactionPrice;
+
+    /// @notice This function sets the price to create, update, delete, reply, like or repost a post
+    /// @param price The price to create, update, delete, reply, like or repost a post
+    function setPostTransactionPrice(uint256 price) external onlyAdmin {
+        postTransactionPrice = price;
+    }
+
+    /// @dev This defines the post structure
+    struct Post {
+        string metadataCid;
+        uint256 timestamp;
+        address author;
+        uint256 quotedPostId;
+        uint256 likes;
+        uint256 reposts;
+        uint256 replies;
+    }
+
+    /// @notice This mapping maps a post ID to a post
+    mapping(uint256 => Post) public posts;
+
+    /// @notice Number of posts
+    uint256 public postCount;
+
+    /// @notice This mapping stores the post IDs that an account has created
+    mapping(address => EnumerableSetUpgradeable.UintSet) private postsByAccount;
+
+    /// @notice This function gets the post IDs that an account has created
+    /// @param account The account to get the post IDs for
+    /// @return The post IDs that an account has created
+    function getPostsByAccount(address account) external view returns (uint256[] memory) {
+        return postsByAccount[account].values();
+    }
+
+    /// @notice This function gets the number of post IDs that an account has created
+    /// @param account The account to get the number of post IDs for
+    /// @return The number of post IDs that an account has created
+    function getPostsByAccountCount(address account) external view returns (uint256) {
+        return postsByAccount[account].length();
+    }
+
+    /// @notice This function gets the post ID that an account has created at the given index
+    /// @param account The account to get the post ID for
+    /// @param index The index of the post ID to get
+    /// @return The post ID that an account has created at the given index
+    function getPostByAccountAtIndex(address account, uint256 index) external view returns (uint256) {
+        return postsByAccount[account].at(index);
+    }
+
+    /// @notice This mapping stores the post IDs a user has liked
+    mapping(address => EnumerableSetUpgradeable.UintSet) private likedPosts;
+
+    /// @notice This function gets the post IDs that a user has liked
+    /// @param account The account to get the post IDs for
+    /// @return The post IDs that a user has liked
+    function getLikedPosts(address account) external view returns (uint256[] memory) {
+        return likedPosts[account].values();
+    }
+
+    /// @notice This function gets the number of post IDs that a user has liked
+    /// @param account The account to get the number of post IDs for
+    /// @return The number of post IDs that a user has liked
+    function getLikedPostsCount(address account) external view returns (uint256) {
+        return likedPosts[account].length();
+    }
+
+    /// @notice This function gets the post ID that a user has liked at the given index
+    /// @param account The account to get the post ID for
+    /// @param index The index of the post ID to get
+    /// @return The post ID that a user has liked at the given index
+    function getLikedPostAtIndex(address account, uint256 index) external view returns (uint256) {
+        return likedPosts[account].at(index);
+    }
+
+    /// @notice This event is emitted when a post is created
+    event PostCreated(uint256 indexed postId, address indexed author, string metadataCid);
+
+    /// @notice This function creates a post
+    /// @param metadataCid The CID of the post metadata
+    /// @param quotedPostId The ID of the post being quoted (0 if not quoting a post)
+    function createPost(string calldata metadataCid, uint256 quotedPostId) external payable {
+        if (msg.value < postTransactionPrice) {
+            revert DidNotPayEnough();
+        }
+
+        postCount++;
+        posts[postCount] = Post({
+            metadataCid: metadataCid,
+            timestamp: block.timestamp,
+            author: msg.sender,
+            quotedPostId: quotedPostId,
+            likes: 0,
+            reposts: 0,
+            replies: 0
+        });
+
+        postsByAccount[msg.sender].add(postCount);
+
+        if (quotedPostId != 0) {
+            posts[quotedPostId].replies++;
+        }
+
+        emit PostCreated(postCount, msg.sender, metadataCid);
+    }
+
+    /// @notice This event is emitted when a post is updated
+    event PostUpdated(uint256 indexed postId, address indexed author, string metadataCid);
+
+    /// @notice This function updates a post
+    /// @param postId The ID of the post to update
+    /// @param metadataCid The CID of the post metadata
+    function updatePost(uint256 postId, string calldata metadataCid) external payable {
+        if (msg.value < postTransactionPrice) {
+            revert DidNotPayEnough();
+        }
+
+        Post storage post = posts[postId];
+        if (post.author != msg.sender) {
+            revert NotTheAuthor();
+        }
+
+        post.metadataCid = metadataCid;
+
+        emit PostUpdated(postId, msg.sender, metadataCid);
+    }
+
+    /// @notice This event is emitted when a post is deleted
+    event PostDeleted(uint256 indexed postId, address indexed author);
+
+    /// @notice This function deletes a post
+    /// @param postId The ID of the post to delete
+    /// @dev This should only delete the metadata cid and not the post itself
+    function deletePost(uint256 postId) external payable {
+        if (msg.value < postTransactionPrice) {
+            revert DidNotPayEnough();
+        }
+
+        Post storage post = posts[postId];
+        if (post.author != msg.sender) {
+            revert NotTheAuthor();
+        }
+
+        delete post.metadataCid;
+
+        emit PostDeleted(postId, msg.sender);
+    }
+
+    /// @notice This event is emitted when a post is liked
+    event PostLiked(uint256 indexed postId, address indexed liker);
+
+    /// @notice This function likes a post
+    /// @param postId The ID of the post to like
+    /// @dev No fee is required to like a post (except for the gas fee)
+    function likePost(uint256 postId) external {
+        Post storage post = posts[postId];
+
+        if (likedPosts[msg.sender].contains(postId)) {
+            revert AlreadyLiked();
+        }
+
+        likedPosts[msg.sender].add(postId);
+        post.likes++;
+        emit PostLiked(postId, msg.sender);
+    }
+
+    /// @notice This event is emitted when a post is unliked
+    event PostUnliked(uint256 indexed postId, address indexed unliker);
+
+    /// @notice This function unlikes a post
+    /// @param postId The ID of the post to unlike
+    /// @dev No fee is required to unlike a post (except for the gas fee)
+    function unlikePost(uint256 postId) external {
+        Post storage post = posts[postId];
+
+        if (!likedPosts[msg.sender].contains(postId)) {
+            revert NotLiked();
+        }
+
+        likedPosts[msg.sender].remove(postId);
+        post.likes--;
+        emit PostUnliked(postId, msg.sender);
     }
 }
