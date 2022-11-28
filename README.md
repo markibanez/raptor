@@ -35,3 +35,7 @@ It is the decentralized, web3 version of Twitter.
     - Quoted/reposted post ID
 - Offchain data:
     - Content
+
+## Frontend
+- NextJS with Typescript
+- DaisyUI (based on TailwindCSS)
