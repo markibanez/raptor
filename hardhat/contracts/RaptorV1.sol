@@ -51,13 +51,23 @@ contract RaptorV1 is Initializable, AccessControlUpgradeable {
     /// @dev This mapping is used to check if a handle is already taken
     mapping(string => address) public handles;
 
+    /// @notice This mapping maps an address to its current handle
+    mapping(address => string) public currentHandle;
+
     /// @notice This event is emitted when an account is created
-    event AccountCreated(address indexed account, string metadataCid, string handle);
+    event AccountCreated(
+        address indexed account,
+        string metadataCid,
+        string handle
+    );
 
     /// @notice This function will create an account for the sender
     /// @param metadataCid The IPFS CID for the metadata
     /// @dev The sender must pay the createAccountPrice (to avoid spam and abuse)
-    function createAccount(string calldata metadataCid, string calldata handle) external payable {
+    function createAccount(
+        string calldata metadataCid,
+        string calldata handle
+    ) external payable {
         if (msg.value < createAccountPrice) {
             revert DidNotPayEnough();
         }
@@ -68,6 +78,7 @@ contract RaptorV1 is Initializable, AccessControlUpgradeable {
 
         accounts[msg.sender] = metadataCid;
         handles[handle] = msg.sender;
+        currentHandle[msg.sender] = handle;
         emit AccountCreated(msg.sender, metadataCid, handle);
     }
 
@@ -125,7 +136,10 @@ contract RaptorV1 is Initializable, AccessControlUpgradeable {
     }
 
     /// @notice This event is emitted when an account unfollows another account
-    event AccountUnfollowed(address indexed account, address indexed unfollowed);
+    event AccountUnfollowed(
+        address indexed account,
+        address indexed unfollowed
+    );
 
     /// @notice This function will unfollow an account for the sender
     /// @param account The account to unfollow
@@ -182,15 +196,24 @@ contract RaptorV1 is Initializable, AccessControlUpgradeable {
         postTransactionPrice = price;
     }
 
+    /// @dev This enum represents the type of a post
+    enum PostType {
+        Original,
+        Comment,
+        Repost,
+        Quote
+    }
+
     /// @dev This defines the post structure
     struct Post {
         string metadataCid;
         uint256 timestamp;
         address author;
-        uint256 quotedPostId;
+        PostType postType;
+        uint256 referencedPostId;
         uint256 likes;
         uint256 reposts;
-        uint256 replies;
+        uint256 comments;
     }
 
     /// @notice This mapping maps a post ID to a post
@@ -205,14 +228,18 @@ contract RaptorV1 is Initializable, AccessControlUpgradeable {
     /// @notice This function gets the post IDs that an account has created
     /// @param account The account to get the post IDs for
     /// @return The post IDs that an account has created
-    function getPostsByAccount(address account) external view returns (uint256[] memory) {
+    function getPostsByAccount(
+        address account
+    ) external view returns (uint256[] memory) {
         return postsByAccount[account].values();
     }
 
     /// @notice This function gets the number of post IDs that an account has created
     /// @param account The account to get the number of post IDs for
     /// @return The number of post IDs that an account has created
-    function getPostsByAccountCount(address account) external view returns (uint256) {
+    function getPostsByAccountCount(
+        address account
+    ) external view returns (uint256) {
         return postsByAccount[account].length();
     }
 
@@ -220,7 +247,10 @@ contract RaptorV1 is Initializable, AccessControlUpgradeable {
     /// @param account The account to get the post ID for
     /// @param index The index of the post ID to get
     /// @return The post ID that an account has created at the given index
-    function getPostByAccountAtIndex(address account, uint256 index) external view returns (uint256) {
+    function getPostByAccountAtIndex(
+        address account,
+        uint256 index
+    ) external view returns (uint256) {
         return postsByAccount[account].at(index);
     }
 
@@ -230,14 +260,18 @@ contract RaptorV1 is Initializable, AccessControlUpgradeable {
     /// @notice This function gets the post IDs that a user has liked
     /// @param account The account to get the post IDs for
     /// @return The post IDs that a user has liked
-    function getLikedPosts(address account) external view returns (uint256[] memory) {
+    function getLikedPosts(
+        address account
+    ) external view returns (uint256[] memory) {
         return likedPosts[account].values();
     }
 
     /// @notice This function gets the number of post IDs that a user has liked
     /// @param account The account to get the number of post IDs for
     /// @return The number of post IDs that a user has liked
-    function getLikedPostsCount(address account) external view returns (uint256) {
+    function getLikedPostsCount(
+        address account
+    ) external view returns (uint256) {
         return likedPosts[account].length();
     }
 
@@ -245,17 +279,35 @@ contract RaptorV1 is Initializable, AccessControlUpgradeable {
     /// @param account The account to get the post ID for
     /// @param index The index of the post ID to get
     /// @return The post ID that a user has liked at the given index
-    function getLikedPostAtIndex(address account, uint256 index) external view returns (uint256) {
+    function getLikedPostAtIndex(
+        address account,
+        uint256 index
+    ) external view returns (uint256) {
         return likedPosts[account].at(index);
     }
 
     /// @notice This event is emitted when a post is created
-    event PostCreated(uint256 indexed postId, address indexed author, string metadataCid);
+    event PostCreated(
+        uint256 indexed postId,
+        address indexed author,
+        string metadataCid
+    );
 
     /// @notice This function creates a post
     /// @param metadataCid The CID of the post metadata
-    /// @param quotedPostId The ID of the post being quoted (0 if not quoting a post)
-    function createPost(string calldata metadataCid, uint256 quotedPostId) external payable {
+    /// @param postType The type of the post
+    /// @param referencedPostId The ID of the post being quoted (0 if not quoting a post)
+    /// @param userMentions The accounts mentioned in the post
+    /// @param hashTags The hashtags used in the post
+    /// @param cashTags The cashtags used in the post
+    function createPost(
+        string calldata metadataCid,
+        PostType postType,
+        uint256 referencedPostId,
+        address[] calldata userMentions,
+        string[] calldata hashTags,
+        string[] calldata cashTags
+    ) external payable {
         if (msg.value < postTransactionPrice) {
             revert DidNotPayEnough();
         }
@@ -265,28 +317,56 @@ contract RaptorV1 is Initializable, AccessControlUpgradeable {
             metadataCid: metadataCid,
             timestamp: block.timestamp,
             author: msg.sender,
-            quotedPostId: quotedPostId,
+            postType: postType,
+            referencedPostId: referencedPostId,
             likes: 0,
             reposts: 0,
-            replies: 0
+            comments: 0
         });
 
         postsByAccount[msg.sender].add(postCount);
 
-        if (quotedPostId != 0) {
-            posts[quotedPostId].replies++;
+        if (postType == PostType.Repost || postType == PostType.Quote) {
+            posts[referencedPostId].reposts++;
+        } else if (postType == PostType.Comment) {
+            posts[referencedPostId].comments++;
         }
 
         emit PostCreated(postCount, msg.sender, metadataCid);
+
+        for (uint256 i = 0; i < userMentions.length; i++) {
+            emit UserMentionBroadcasted(userMentions[i], postCount);
+        }
+
+        for (uint256 i = 0; i < hashTags.length; i++) {
+            emit HashTagBroadcasted(hashTags[i], postCount);
+        }
+
+        for (uint256 i = 0; i < cashTags.length; i++) {
+            emit CashTagBroadcasted(cashTags[i], postCount);
+        }
     }
 
     /// @notice This event is emitted when a post is updated
-    event PostUpdated(uint256 indexed postId, address indexed author, string metadataCid);
+    event PostUpdated(
+        uint256 indexed postId,
+        address indexed author,
+        string metadataCid
+    );
 
     /// @notice This function updates a post
     /// @param postId The ID of the post to update
     /// @param metadataCid The CID of the post metadata
-    function updatePost(uint256 postId, string calldata metadataCid) external payable {
+    /// @param userMentions The accounts mentioned in the post
+    /// @param hashTags The hashtags used in the post
+    /// @param cashTags The cashtags used in the post
+    function updatePost(
+        uint256 postId,
+        string calldata metadataCid,
+        address[] calldata userMentions,
+        string[] calldata hashTags,
+        string[] calldata cashTags
+    ) external payable {
         if (msg.value < postTransactionPrice) {
             revert DidNotPayEnough();
         }
@@ -299,6 +379,18 @@ contract RaptorV1 is Initializable, AccessControlUpgradeable {
         post.metadataCid = metadataCid;
 
         emit PostUpdated(postId, msg.sender, metadataCid);
+
+        for (uint256 i = 0; i < userMentions.length; i++) {
+            emit UserMentionBroadcasted(userMentions[i], postId);
+        }
+
+        for (uint256 i = 0; i < hashTags.length; i++) {
+            emit HashTagBroadcasted(hashTags[i], postId);
+        }
+
+        for (uint256 i = 0; i < cashTags.length; i++) {
+            emit CashTagBroadcasted(cashTags[i], postId);
+        }
     }
 
     /// @notice This event is emitted when a post is deleted
@@ -357,4 +449,13 @@ contract RaptorV1 is Initializable, AccessControlUpgradeable {
         post.likes--;
         emit PostUnliked(postId, msg.sender);
     }
+
+    /// @notice This event is emitted to broadcast a user mention
+    event UserMentionBroadcasted(address indexed user, uint256 indexed postId);
+
+    /// @notice This event is emitted to broadcast a hashtag
+    event HashTagBroadcasted(string hashtag, uint256 indexed postId);
+
+    /// @notice This event is emitted to broadcast a cashtag
+    event CashTagBroadcasted(string cashtag, uint256 indexed postId);
 }
