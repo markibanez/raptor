@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "dotenv": "^16.0.3",
-    "nft.storage": "^7.0.0"
+    "nft.storage": "^7.0.0",
+    "twitter-text": "^3.1.0"
   }
 }
