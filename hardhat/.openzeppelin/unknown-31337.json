@@ -2,19 +2,29 @@
   "manifestVersion": "3.2",
   "admin": {
     "address": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-    "txHash": "0xabc92c21c2bebe595e8558ebf82fffa523bea656f42e31c013f513b43d5d98f1"
+    "txHash": "0x91ba53f1e835858d774aa1a63b278684a562d9519ed772dcebcf78cced68bf68"
   },
   "proxies": [
     {
       "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
-      "txHash": "0x17010909a252b8d0e24a89aa006f53817ec2efc2785e5c49c07aff491531171f",
+      "txHash": "0xfdda64a2c2a03839c0e451aac2961b6d46652d48908b3037721348e709bd21bb",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+      "txHash": "0x94ba6b5a2e251cf0ce45790203f98e4b05770eca56dff67dafccfe70885c3f03",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
+      "txHash": "0xf944d8cde3cf22fc9cb218a2b29adae33aab88d1a3f553f4eb68987c70cc1ded",
       "kind": "transparent"
     }
   ],
   "impls": {
-    "160117a34b76af6437df01a332072c339918010e07cfe4089617d9abd3cc35a6": {
+    "3186328ff1c8009798747461220f367f22b45377f33ed45c1f0469a3f1c897c4": {
       "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-      "txHash": "0xe3b18b8f1bc61f7a9ce639638d76afff2b98281262da47d65d37dc5279eae52e",
+      "txHash": "0x8c4d6b70ce25b8646ba5fe6b2fdd0a90223f64723bc20fe450d51a32eccf3f8b",
       "layout": {
         "solcVersion": "0.8.17",
         "storage": [
@@ -73,7 +83,7 @@
             "slot": "151",
             "type": "t_uint256",
             "contract": "RaptorV1",
-            "src": "contracts\\RaptorV1.sol:28"
+            "src": "contracts\\RaptorV1.sol:38"
           },
           {
             "label": "accounts",
@@ -81,13 +91,81 @@
             "slot": "152",
             "type": "t_mapping(t_address,t_string_storage)",
             "contract": "RaptorV1",
-            "src": "contracts\\RaptorV1.sol:38"
+            "src": "contracts\\RaptorV1.sol:48"
+          },
+          {
+            "label": "handles",
+            "offset": 0,
+            "slot": "153",
+            "type": "t_mapping(t_string_memory_ptr,t_address)",
+            "contract": "RaptorV1",
+            "src": "contracts\\RaptorV1.sol:52"
+          },
+          {
+            "label": "follows",
+            "offset": 0,
+            "slot": "154",
+            "type": "t_mapping(t_address,t_struct(AddressSet)2325_storage)",
+            "contract": "RaptorV1",
+            "src": "contracts\\RaptorV1.sol:111"
+          },
+          {
+            "label": "followers",
+            "offset": 0,
+            "slot": "155",
+            "type": "t_mapping(t_address,t_struct(AddressSet)2325_storage)",
+            "contract": "RaptorV1",
+            "src": "contracts\\RaptorV1.sol:114"
+          },
+          {
+            "label": "postTransactionPrice",
+            "offset": 0,
+            "slot": "156",
+            "type": "t_uint256",
+            "contract": "RaptorV1",
+            "src": "contracts\\RaptorV1.sol:177"
+          },
+          {
+            "label": "posts",
+            "offset": 0,
+            "slot": "157",
+            "type": "t_mapping(t_uint256,t_struct(Post)3072_storage)",
+            "contract": "RaptorV1",
+            "src": "contracts\\RaptorV1.sol:197"
+          },
+          {
+            "label": "postCount",
+            "offset": 0,
+            "slot": "158",
+            "type": "t_uint256",
+            "contract": "RaptorV1",
+            "src": "contracts\\RaptorV1.sol:200"
+          },
+          {
+            "label": "postsByAccount",
+            "offset": 0,
+            "slot": "159",
+            "type": "t_mapping(t_address,t_struct(UintSet)2482_storage)",
+            "contract": "RaptorV1",
+            "src": "contracts\\RaptorV1.sol:203"
+          },
+          {
+            "label": "likedPosts",
+            "offset": 0,
+            "slot": "160",
+            "type": "t_mapping(t_address,t_struct(UintSet)2482_storage)",
+            "contract": "RaptorV1",
+            "src": "contracts\\RaptorV1.sol:228"
           }
         ],
         "types": {
           "t_address": {
             "label": "address",
             "numberOfBytes": "20"
+          },
+          "t_array(t_bytes32)dyn_storage": {
+            "label": "bytes32[]",
+            "numberOfBytes": "32"
           },
           "t_array(t_uint256)49_storage": {
             "label": "uint256[49]",
@@ -113,13 +191,97 @@
             "label": "mapping(address => string)",
             "numberOfBytes": "32"
           },
+          "t_mapping(t_address,t_struct(AddressSet)2325_storage)": {
+            "label": "mapping(address => struct EnumerableSetUpgradeable.AddressSet)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(UintSet)2482_storage)": {
+            "label": "mapping(address => struct EnumerableSetUpgradeable.UintSet)",
+            "numberOfBytes": "32"
+          },
           "t_mapping(t_bytes32,t_struct(RoleData)34_storage)": {
             "label": "mapping(bytes32 => struct AccessControlUpgradeable.RoleData)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_uint256)": {
+            "label": "mapping(bytes32 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_string_memory_ptr,t_address)": {
+            "label": "mapping(string => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(Post)3072_storage)": {
+            "label": "mapping(uint256 => struct RaptorV1.Post)",
+            "numberOfBytes": "32"
+          },
+          "t_string_memory_ptr": {
+            "label": "string",
             "numberOfBytes": "32"
           },
           "t_string_storage": {
             "label": "string",
             "numberOfBytes": "32"
+          },
+          "t_struct(AddressSet)2325_storage": {
+            "label": "struct EnumerableSetUpgradeable.AddressSet",
+            "members": [
+              {
+                "label": "_inner",
+                "type": "t_struct(Set)2010_storage",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_struct(Post)3072_storage": {
+            "label": "struct RaptorV1.Post",
+            "members": [
+              {
+                "label": "metadataCid",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "timestamp",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "author",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "quotedPostId",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "likes",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "reposts",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "replies",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "6"
+              }
+            ],
+            "numberOfBytes": "224"
           },
           "t_struct(RoleData)34_storage": {
             "label": "struct AccessControlUpgradeable.RoleData",
@@ -135,6 +297,36 @@
                 "type": "t_bytes32",
                 "offset": 0,
                 "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_struct(Set)2010_storage": {
+            "label": "struct EnumerableSetUpgradeable.Set",
+            "members": [
+              {
+                "label": "_values",
+                "type": "t_array(t_bytes32)dyn_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_indexes",
+                "type": "t_mapping(t_bytes32,t_uint256)",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_struct(UintSet)2482_storage": {
+            "label": "struct EnumerableSetUpgradeable.UintSet",
+            "members": [
+              {
+                "label": "_inner",
+                "type": "t_struct(Set)2010_storage",
+                "offset": 0,
+                "slot": "0"
               }
             ],
             "numberOfBytes": "64"
