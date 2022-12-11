@@ -39,3 +39,8 @@ It is the decentralized, web3 version of Twitter.
 ## Frontend
 - NextJS with Typescript
 - DaisyUI (based on TailwindCSS)
+
+## Design
+- Cobalt Blue: 0047AB
+- Indigo: 4B0082
+- Prussian Blue: 003153
